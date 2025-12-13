@@ -1,30 +1,21 @@
 // gemini-helper.js - AI Helper for Pinkie Pie personality
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const memorySystem = require('./memory-system');
 
 class PinkieAI {
     constructor() {
-        if (!process.env.GEMINI_API_KEY) {
-            console.warn('⚠️ GEMINI_API_KEY not found in environment variables!');
-            this.genAI = null;
+        if (!process.env.OPENROUTER_API_KEY) {
+            console.warn('⚠️ OPENROUTER_API_KEY not found in environment variables!');
+            this.apiKey = null;
             return;
         }
         
-        this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        this.apiKey = process.env.OPENROUTER_API_KEY;
+        this.apiEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
         
-        // Try different models in order of preference (updated for 2025)
-        this.modelNames = [
-            "gemini-2.5-flash",              // Fast and free tier
-            "models/gemini-2.5-flash"        // Full path format
-        ];
-
-        this.alternateModelNames = [
-            "gemini-2.5-pro",                // More capable, may have cost
-            "models/gemini-2.5-pro"
-        ];
+        // Using OpenRouter with Gemini 2.0 Flash Experimental (free)
+        this.modelName = 'google/gemini-2.0-flash-exp:free';
         
-        this.currentModelIndex = 0;
-        this.model = this.genAI.getGenerativeModel({ model: this.modelNames[0] });
+        console.log('✅ OpenRouter API initialized with model:', this.modelName);
         
         // System prompt that defines Pinkie Pie's personality
         this.systemPrompt = `
@@ -92,7 +83,7 @@ Remember: You can be over the top when someone really needs cheering up, but mos
 
     // Check if AI is available
     isAvailable() {
-        return this.genAI !== null;
+        return this.apiKey !== null;
     }
 
     // Advanced typing indicator with natural delays
@@ -145,90 +136,101 @@ Remember: You can be over the top when someone really needs cheering up, but mos
         const typingInterval = await this.startTypingIndicator(context.channel);
 
         try {
-            // Try each model until one works
-            for (let attempt = 0; attempt < this.modelNames.length; attempt++) {
-                try {
-                    // Build context information
-                    const contextString = this.buildContext(userMessage, context);
-                    
-                    // Generate response using current model
-                    console.log(`🤖 Trying model: ${this.modelNames[this.currentModelIndex]}`);
-                    const result = await this.model.generateContent([
-                        this.systemPrompt,
-                        contextString
-                    ]);
-
-                    const response = await result.response;
-                    let aiResponse = response.text();
-
-                    // Clean and validate response
-                    aiResponse = this.cleanResponse(aiResponse, context);
-                    
-                    console.log(`✅ AI Response generated successfully with ${this.modelNames[this.currentModelIndex]}`);
-                    
-                    // Save to memory
-                    await this.saveConversation(userMessage, aiResponse, context, this.modelNames[this.currentModelIndex]);
-                    
-                    // Clear typing indicator
-                    this.stopTypingIndicator(typingInterval);
-                    
-                    return {
-                        success: true,
-                        response: aiResponse,
-                        source: 'ai',
-                        model: this.modelNames[this.currentModelIndex]
-                    };
-
-                } catch (modelError) {
-                    console.error(`❌ Model ${this.modelNames[this.currentModelIndex]} failed:`, modelError.message);
-                    
-                    // Try next model if available
-                    if (attempt < this.modelNames.length - 1) {
-                        this.currentModelIndex = (this.currentModelIndex + 1) % this.modelNames.length;
-                        this.model = this.genAI.getGenerativeModel({ model: this.modelNames[this.currentModelIndex] });
-                        console.log(`🔄 Switching to model: ${this.modelNames[this.currentModelIndex]}`);
-                        continue;
-                    }
-                    
-                    // If all models fail, handle the error
-                    console.error('🚨 All AI models failed:', modelError);
-                    
-                    let fallbackResponse;
-                    
-                    // Handle specific error types
-                    if (modelError.message.includes('not found') || modelError.message.includes('404')) {
-                        console.error('🔄 Model not found - all models deprecated?');
-                        fallbackResponse = "OHMYGOSH! My super-duper AI brain is having model troubles! *giggles nervously* The smart-ponies at Google changed something and now I'm all confused! But don't worry - I'm still here to party with you the old-fashioned way! 🎈🔧";
-                    } else if (modelError.message.includes('quota') || modelError.message.includes('limit')) {
-                        fallbackResponse = "OH NO! I used up all my thinking power for today! *bounces sadly* It's like eating too many cupcakes - even I have limits! Try again later when my brain recharges! 🤖⚡";
-                    } else if (modelError.message.includes('API')) {
-                        fallbackResponse = "GASP! The smart-thinking magic isn't working right now! *taps head* Maybe the internet ponies are having a party without us! Don't worry though - regular Pinkie is still AMAZING! 🎪✨";
-                    } else {
-                        fallbackResponse = this.getFallbackResponse();
-                    }
-                    
-                    // Clear typing indicator before returning error
-                    this.stopTypingIndicator(typingInterval);
-                    
-                    // Return fallback response on error
-                    return {
-                        success: false,
-                        response: fallbackResponse,
-                        source: 'fallback',
-                        error: modelError.message
-                    };
-                }
-            }
-
-            // This should never be reached, but just in case
-            this.stopTypingIndicator(typingInterval);
+            // Build context information
+            const contextString = this.buildContext(userMessage, context);
             
-            return {
-                success: false,
-                response: this.getFallbackResponse(),
-                source: 'fallback',
-                error: 'Unknown error - all models failed'
-            };
+            // Build messages array for OpenRouter API
+            const messages = [
+                {
+                    role: 'system',
+                    content: this.systemPrompt
+                },
+                {
+                    role: 'user',
+                    content: contextString
+                }
+            ];
+            
+            console.log(`🤖 Generating response with OpenRouter (${this.modelName})...`);
+            
+            try {
+                // Call OpenRouter API
+                const response = await fetch(this.apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://github.com/ponkbot', // Optional: your app URL
+                        'X-Title': 'PonkBot Discord Bot' // Optional: your app name
+                    },
+                    body: JSON.stringify({
+                        model: this.modelName,
+                        messages: messages,
+                        max_tokens: 800, // Limit response length
+                        temperature: 0.8, // Slightly creative for Pinkie Pie personality
+                        top_p: 0.9
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`API Error ${response.status}: ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Extract AI response
+                let aiResponse = data.choices[0]?.message?.content;
+                
+                if (!aiResponse) {
+                    throw new Error('No response content from API');
+                }
+
+                // Clean and validate response
+                aiResponse = this.cleanResponse(aiResponse, context);
+                
+                console.log(`✅ AI Response generated successfully with ${this.modelName}`);
+                
+                // Save to memory
+                await this.saveConversation(userMessage, aiResponse, context, this.modelName);
+                
+                // Clear typing indicator
+                this.stopTypingIndicator(typingInterval);
+                
+                return {
+                    success: true,
+                    response: aiResponse,
+                    source: 'ai',
+                    model: this.modelName
+                };
+
+            } catch (apiError) {
+                console.error('🚨 OpenRouter API failed:', apiError.message);
+                
+                let fallbackResponse;
+                
+                // Handle specific error types
+                if (apiError.message.includes('401') || apiError.message.includes('Unauthorized')) {
+                    fallbackResponse = "OOPS! My AI brain key isn't working right! *giggles nervously* Someone needs to check the OPENROUTER_API_KEY! But don't worry - I'm still here for you! 🎈🔧";
+                } else if (apiError.message.includes('429') || apiError.message.includes('rate limit')) {
+                    fallbackResponse = "OH NO! I talked too much and hit my rate limit! *bounces sadly* It's like eating too many cupcakes - even I have limits! Try again in a little bit! 🤖⚡";
+                } else if (apiError.message.includes('404') || apiError.message.includes('not found')) {
+                    fallbackResponse = "GASP! The AI model went on vacation without telling me! *looks confused* Maybe we need to check if the model name is correct? 🎪✨";
+                } else {
+                    fallbackResponse = this.getFallbackResponse();
+                }
+                
+                // Clear typing indicator before returning error
+                this.stopTypingIndicator(typingInterval);
+                
+                // Return fallback response on error
+                return {
+                    success: false,
+                    response: fallbackResponse,
+                    source: 'fallback',
+                    error: apiError.message
+                };
+            }
 
         } catch (generalError) {
             // Clear typing indicator in case of general error
