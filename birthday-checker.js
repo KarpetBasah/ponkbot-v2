@@ -174,7 +174,7 @@ async function checkBirthdays(client) {
                                         inline: false
                                     }
                                 )
-                                .setThumbnail('https://derpicdn.net/img/view/2017/3/4/1379385.gif') // Pinkie celebration
+                                .setThumbnail('https://derpicdn.net/img/2025/3/30/3576531/large.gif') // Pinkie celebration
                                 .setFooter({ text: `Love from Pinkie Pie • Birthday wishes from ${guild.name} 💖` })
                                 .setTimestamp();
 

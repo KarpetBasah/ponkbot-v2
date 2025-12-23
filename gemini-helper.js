@@ -13,7 +13,12 @@ class PinkieAI {
         this.apiEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
         
         // Using OpenRouter with Gemini 2.0 Flash Experimental (free)
-        this.modelName = 'google/gemini-2.0-flash-exp:free';
+        this.modelName = 'tngtech/deepseek-r1t2-chimera:free';
+        
+        // Rate limiting protection
+        this.lastRequestTime = 0;
+        this.minRequestInterval = 1000; // Minimum 1 second between requests
+        this.maxRetries = 3; // Maximum retry attempts
         
         console.log('✅ OpenRouter API initialized with model:', this.modelName);
         
@@ -153,84 +158,138 @@ Remember: You can be over the top when someone really needs cheering up, but mos
             
             console.log(`🤖 Generating response with OpenRouter (${this.modelName})...`);
             
-            try {
-                // Call OpenRouter API
-                const response = await fetch(this.apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${this.apiKey}`,
-                        'Content-Type': 'application/json',
-                        'HTTP-Referer': 'https://github.com/ponkbot', // Optional: your app URL
-                        'X-Title': 'PonkBot Discord Bot' // Optional: your app name
-                    },
-                    body: JSON.stringify({
+            // Retry logic with exponential backoff
+            let lastError = null;
+            
+            for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+                try {
+                    // Rate limiting protection - wait if requests are too close together
+                    const timeSinceLastRequest = Date.now() - this.lastRequestTime;
+                    if (timeSinceLastRequest < this.minRequestInterval) {
+                        const waitTime = this.minRequestInterval - timeSinceLastRequest;
+                        console.log(`⏳ Rate limiting: waiting ${waitTime}ms before request...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                    }
+                    
+                    this.lastRequestTime = Date.now();
+                    
+                    console.log(`📡 API Request attempt ${attempt}/${this.maxRetries}...`);
+                    
+                    // Call OpenRouter API
+                    const response = await fetch(this.apiEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${this.apiKey}`,
+                            'Content-Type': 'application/json',
+                            'HTTP-Referer': 'https://github.com/ponkbot',
+                            'X-Title': 'PonkBot Discord Bot'
+                        },
+                        body: JSON.stringify({
+                            model: this.modelName,
+                            messages: messages,
+                            max_tokens: 800,
+                            temperature: 0.8,
+                            top_p: 0.9
+                        })
+                    });
+
+                    // Handle rate limiting with retry
+                    if (response.status === 429) {
+                        const errorData = await response.json().catch(() => ({}));
+                        const retryAfter = response.headers.get('retry-after') || (attempt * 2);
+                        const waitSeconds = parseInt(retryAfter);
+                        
+                        console.warn(`⚠️ Rate limit hit! Retry after ${waitSeconds} seconds (attempt ${attempt}/${this.maxRetries})`);
+                        
+                        if (attempt < this.maxRetries) {
+                            // Exponential backoff: wait longer for each retry
+                            const backoffTime = waitSeconds * 1000 * attempt;
+                            console.log(`⏳ Waiting ${backoffTime}ms before retry...`);
+                            await new Promise(resolve => setTimeout(resolve, backoffTime));
+                            continue; // Retry
+                        }
+                        
+                        throw new Error(`Rate limit exceeded after ${this.maxRetries} attempts. ${errorData.error?.message || ''}`);
+                    }
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(`API Error ${response.status}: ${errorData.error?.message || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    // Extract AI response
+                    let aiResponse = data.choices[0]?.message?.content;
+                    
+                    if (!aiResponse) {
+                        throw new Error('No response content from API');
+                    }
+
+                    // Clean and validate response
+                    aiResponse = this.cleanResponse(aiResponse, context);
+                    
+                    console.log(`✅ AI Response generated successfully with ${this.modelName} (attempt ${attempt})`);
+                    
+                    // Save to memory
+                    await this.saveConversation(userMessage, aiResponse, context, this.modelName);
+                    
+                    // Clear typing indicator
+                    this.stopTypingIndicator(typingInterval);
+                    
+                    return {
+                        success: true,
+                        response: aiResponse,
+                        source: 'ai',
                         model: this.modelName,
-                        messages: messages,
-                        max_tokens: 800, // Limit response length
-                        temperature: 0.8, // Slightly creative for Pinkie Pie personality
-                        top_p: 0.9
-                    })
-                });
+                        attempts: attempt
+                    };
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`API Error ${response.status}: ${errorData.error?.message || response.statusText}`);
+                } catch (apiError) {
+                    lastError = apiError;
+                    console.error(`❌ API attempt ${attempt}/${this.maxRetries} failed:`, apiError.message);
+                    
+                    // If this is not a retryable error or last attempt, break
+                    if (!apiError.message.includes('429') || attempt === this.maxRetries) {
+                        break;
+                    }
+                    
+                    // Wait before retry (exponential backoff)
+                    const backoffTime = 1000 * Math.pow(2, attempt);
+                    console.log(`⏳ Exponential backoff: waiting ${backoffTime}ms before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, backoffTime));
                 }
-
-                const data = await response.json();
-                
-                // Extract AI response
-                let aiResponse = data.choices[0]?.message?.content;
-                
-                if (!aiResponse) {
-                    throw new Error('No response content from API');
-                }
-
-                // Clean and validate response
-                aiResponse = this.cleanResponse(aiResponse, context);
-                
-                console.log(`✅ AI Response generated successfully with ${this.modelName}`);
-                
-                // Save to memory
-                await this.saveConversation(userMessage, aiResponse, context, this.modelName);
-                
-                // Clear typing indicator
-                this.stopTypingIndicator(typingInterval);
-                
-                return {
-                    success: true,
-                    response: aiResponse,
-                    source: 'ai',
-                    model: this.modelName
-                };
-
-            } catch (apiError) {
-                console.error('🚨 OpenRouter API failed:', apiError.message);
-                
-                let fallbackResponse;
-                
-                // Handle specific error types
-                if (apiError.message.includes('401') || apiError.message.includes('Unauthorized')) {
-                    fallbackResponse = "OOPS! My AI brain key isn't working right! *giggles nervously* Someone needs to check the OPENROUTER_API_KEY! But don't worry - I'm still here for you! 🎈🔧";
-                } else if (apiError.message.includes('429') || apiError.message.includes('rate limit')) {
-                    fallbackResponse = "OH NO! I talked too much and hit my rate limit! *bounces sadly* It's like eating too many cupcakes - even I have limits! Try again in a little bit! 🤖⚡";
-                } else if (apiError.message.includes('404') || apiError.message.includes('not found')) {
-                    fallbackResponse = "GASP! The AI model went on vacation without telling me! *looks confused* Maybe we need to check if the model name is correct? 🎪✨";
-                } else {
-                    fallbackResponse = this.getFallbackResponse();
-                }
-                
-                // Clear typing indicator before returning error
-                this.stopTypingIndicator(typingInterval);
-                
-                // Return fallback response on error
-                return {
-                    success: false,
-                    response: fallbackResponse,
-                    source: 'fallback',
-                    error: apiError.message
-                };
             }
+            
+            // All retries failed
+            console.error('🚨 All retry attempts failed:', lastError?.message);
+            
+            let fallbackResponse;
+            
+            // Handle specific error types
+            if (lastError.message.includes('401') || lastError.message.includes('Unauthorized')) {
+                fallbackResponse = "OOPS! My AI brain key isn't working right! *giggles nervously* Someone needs to check the OPENROUTER_API_KEY! But don't worry - I'm still here for you! 🎈🔧";
+            } else if (lastError.message.includes('429') || lastError.message.includes('rate limit')) {
+                fallbackResponse = "OH NO! I talked too much and the API is taking a cupcake break! *bounces sadly* The free tier has limits - try again in a minute or two! 🤖⚡";
+            } else if (lastError.message.includes('404') || lastError.message.includes('not found')) {
+                fallbackResponse = "GASP! The AI model went on vacation without telling me! *looks confused* Maybe we need to check if the model name is correct? 🎪✨";
+            } else if (lastError.message.includes('Provider returned error')) {
+                fallbackResponse = "Oopsie! The AI provider (Google Gemini) is having a little trouble right now! *giggles nervously* It's not me, it's them! Try again in a bit? 🎈🔧";
+            } else {
+                fallbackResponse = this.getFallbackResponse();
+            }
+            
+            // Clear typing indicator before returning error
+            this.stopTypingIndicator(typingInterval);
+            
+            // Return fallback response on error
+            return {
+                success: false,
+                response: fallbackResponse,
+                source: 'fallback',
+                error: lastError?.message,
+                attempts: this.maxRetries
+            };
 
         } catch (generalError) {
             // Clear typing indicator in case of general error
