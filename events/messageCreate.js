@@ -1,6 +1,6 @@
 // events/messageCreate.js
 const { Events, ChannelType, EmbedBuilder } = require('discord.js');
-const pinkieAI = require('../gemini-helper');
+const pinkieAI = require('../ai-helper');
 
 module.exports = {
     name: Events.MessageCreate,

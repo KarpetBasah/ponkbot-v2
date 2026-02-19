@@ -1,6 +1,6 @@
 // commands/chat-pinkie.js
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
-const pinkieAI = require('../gemini-helper');
+const pinkieAI = require('../ai-helper');
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -77,7 +77,7 @@ module.exports = {
 
         // REGISTRATION STRATEGY
         // Set mode: 'development', 'production', atau 'hybrid'
-        const registrationMode = 'production'; // Ubah ke 'production' untuk production
+        const registrationMode = 'development'; // Ubah ke 'production' untuk production
         const testGuildId = '1124372810257674290'; // Guild untuk development testing
 
         try {

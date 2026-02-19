@@ -1,6 +1,6 @@
 // commands/ai-test.js
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
-const pinkieAI = require('../gemini-helper');
+const pinkieAI = require('../ai-helper');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -34,12 +34,15 @@ module.exports = {
             if (!pinkieAI.isAvailable()) {
                 embed.addFields(
                     { name: '❌ AI Status', value: 'Not Available - API Key missing!', inline: true },
-                    { name: '🔧 Fix', value: 'Check GEMINI_API_KEY in .env file', inline: true }
+                    { name: '🔧 Fix', value: 'Check OPENROUTER_API_KEY in .env file', inline: true }
                 );
             } else {
                 embed.addFields(
                     { name: '✅ AI Status', value: 'Available and ready!', inline: true },
-                    { name: '🧠 Current Model', value: pinkieAI.modelNames[pinkieAI.currentModelIndex], inline: true }
+                    { name: '🤖 API Provider', value: 'OpenRouter', inline: true },
+                    { name: '🧠 Current Model', value: pinkieAI.modelName, inline: true },
+                    { name: '⚙️ Rate Limit', value: `Min ${pinkieAI.minRequestInterval}ms between requests`, inline: true },
+                    { name: '🔄 Max Retries', value: `${pinkieAI.maxRetries} attempts`, inline: true }
                 );
 
                 // Test with simple message
@@ -53,13 +56,15 @@ module.exports = {
                     embed.addFields(
                         { name: '🎉 Test Result', value: 'SUCCESS!', inline: true },
                         { name: '🤖 Model Used', value: testResult.model || 'Unknown', inline: true },
+                        { name: '� Attempts', value: `${testResult.attempts || 1}/${pinkieAI.maxRetries}`, inline: true },
                         { name: '💬 Sample Response', value: testResult.response.substring(0, 200) + '...', inline: false }
                     );
                     embed.setColor('#00ff00');
                 } else {
                     embed.addFields(
                         { name: '⚠️ Test Result', value: 'Failed - Using Fallback', inline: true },
-                        { name: '❌ Error', value: testResult.error || 'Unknown error', inline: true },
+                        { name: '❌ Error', value: testResult.error ? testResult.error.substring(0, 200) : 'Unknown error', inline: false },
+                        { name: '📊 Attempts', value: `${testResult.attempts || 0}/${pinkieAI.maxRetries}`, inline: true },
                         { name: '🎪 Fallback Response', value: testResult.response.substring(0, 200) + '...', inline: false }
                     );
                     embed.setColor('#ffaa00');

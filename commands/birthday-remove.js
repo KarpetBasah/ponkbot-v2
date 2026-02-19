@@ -33,29 +33,11 @@ function saveBirthdays(birthdays) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-remove')
-        .setDescription('Remove your birthday from Pinkie\'s party calendar 😢')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('Remove someone else\'s birthday (admin only)')
-                .setRequired(false)),
+        .setDescription('Remove your birthday from Pinkie\'s party calendar 😢'),
     async execute(interaction) {
-        const targetUser = interaction.options.getUser('user') || interaction.user;
-        const isRemovingOthers = targetUser.id !== interaction.user.id;
+        const targetUser = interaction.user;
         
         try {
-            // Check if user is trying to remove someone else's birthday
-            if (isRemovingOthers) {
-                if (!interaction.member?.permissions.has('ADMINISTRATOR')) {
-                    const errorEmbed = new EmbedBuilder()
-                        .setColor('#ff6b6b')
-                        .setTitle('🚫 Permission Denied!')
-                        .setDescription('OH NO! You can only remove your own birthday! Only administrators can remove other ponies\' birthdays!')
-                        .setFooter({ text: 'Pinkie\'s Birthday Security • Protecting party plans! 🎂' });
-                    
-                    return await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
-                }
-            }
-            
             // Load birthdays
             const birthdays = loadBirthdays();
             const guildId = interaction.guild?.id || 'dm';

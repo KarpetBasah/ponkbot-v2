@@ -4,6 +4,18 @@ const fs = require('fs');
 const path = require('path');
 
 const birthdaysFile = path.join(__dirname, 'data', 'birthdays.json');
+const configFile = path.join(__dirname, 'data', 'birthday-config.json');
+
+function loadConfig() {
+    try {
+        if (fs.existsSync(configFile)) {
+            return JSON.parse(fs.readFileSync(configFile, 'utf8'));
+        }
+    } catch (error) {
+        console.error('Error loading birthday config:', error);
+    }
+    return {};
+}
 
 function loadBirthdays() {
     try {
@@ -45,15 +57,46 @@ async function checkBirthdays(client) {
                 continue;
             }
             
-            // Find birthday channel or general channel
-            const birthdayChannel = guild.channels.cache.find(ch => 
-                ch.name.includes('birthday') || 
-                ch.name.includes('party') || 
-                ch.name.includes('general') ||
-                ch.name.includes('celebration')
-            );
+            // Find birthday channel: use config first, fallback to auto-detect
+            const config = loadConfig();
+            const guildConfig = typeof config[guildId] === 'string'
+                ? { channelId: config[guildId] }  // legacy flat format
+                : (config[guildId] || {});
+            const configuredChannelId = guildConfig.channelId;
             
-            if (!birthdayChannel || !birthdayChannel.isTextBased()) continue;
+            let birthdayChannel;
+            if (configuredChannelId) {
+                birthdayChannel = guild.channels.cache.get(configuredChannelId);
+                if (!birthdayChannel) {
+                    console.log(`⚠️ Configured birthday channel for ${guild.name} not found, falling back to auto-detect...`);
+                }
+            }
+            
+            if (!birthdayChannel || !birthdayChannel.isTextBased()) {
+                birthdayChannel = guild.channels.cache.find(ch =>
+                    ch.isTextBased() && (
+                        ch.name.includes('birthday') ||
+                        ch.name.includes('party') ||
+                        ch.name.includes('general') ||
+                        ch.name.includes('celebration')
+                    )
+                );
+            }
+            
+            if (!birthdayChannel || !birthdayChannel.isTextBased()) {
+                console.log(`⚠️ No suitable birthday channel found in ${guild.name}, skipping...`);
+                continue;
+            }
+            
+            const channelSource = configuredChannelId && guild.channels.cache.get(configuredChannelId) ? 'configured' : 'auto-detected';
+            console.log(`📢 Using channel #${birthdayChannel.name} for birthdays in ${guild.name} (${channelSource})`);
+            
+            // Resolve birthday role from config
+            const configuredRoleId = guildConfig.roleId;
+            const configuredBirthdayRole = configuredRoleId ? guild.roles.cache.get(configuredRoleId) : null;
+            if (configuredRoleId && !configuredBirthdayRole) {
+                console.log(`⚠️ Configured birthday role (${configuredRoleId}) not found in ${guild.name}`);
+            }
             
             // Check for today's birthdays
             for (const [userId, birthdayData] of Object.entries(guildBirthdays)) {
@@ -126,28 +169,33 @@ async function checkBirthdays(client) {
                             embeds: [birthdayEmbed] 
                         });
                         
-                        // Try to give birthday role if it exists
-                        const birthdayRole = guild.roles.cache.find(role => 
-                            role.name.toLowerCase().includes('birthday') ||
-                            role.name.toLowerCase().includes('party')
-                        );
-                        
-                        if (birthdayRole && member) {
+                        // Assign configured birthday role for 24 hours
+                        if (configuredBirthdayRole && member) {
                             try {
-                                await member.roles.add(birthdayRole);
-                                console.log(`🎭 Added birthday role to ${user.username}`);
+                                const botMember = guild.members.me;
+                                const canAssign = botMember.roles.highest.comparePositionTo(configuredBirthdayRole) > 0;
                                 
-                                // Set timeout to remove role after 24 hours
-                                setTimeout(async () => {
-                                    try {
-                                        await member.roles.remove(birthdayRole);
-                                        console.log(`🎭 Removed birthday role from ${user.username} after 24 hours`);
-                                    } catch (removeError) {
-                                        console.log(`Could not remove birthday role from ${user.username}`);
-                                    }
-                                }, 24 * 60 * 60 * 1000); // 24 hours
+                                if (canAssign) {
+                                    await member.roles.add(configuredBirthdayRole);
+                                    console.log(`🎭 Added birthday role @${configuredBirthdayRole.name} to ${user.username}`);
+                                    
+                                    // Remove role after exactly 24 hours
+                                    setTimeout(async () => {
+                                        try {
+                                            const freshMember = await guild.members.fetch(userId).catch(() => null);
+                                            if (freshMember) {
+                                                await freshMember.roles.remove(configuredBirthdayRole);
+                                                console.log(`🎭 Removed birthday role from ${user.username} after 24 hours`);
+                                            }
+                                        } catch (removeError) {
+                                            console.log(`Could not remove birthday role from ${user.username}: ${removeError.message}`);
+                                        }
+                                    }, 24 * 60 * 60 * 1000);
+                                } else {
+                                    console.log(`⚠️ Cannot assign birthday role to ${user.username} - bot role is too low!`);
+                                }
                             } catch (roleError) {
-                                console.log(`Could not add birthday role to ${user.username}`);
+                                console.log(`Could not add birthday role to ${user.username}: ${roleError.message}`);
                             }
                         }
                         

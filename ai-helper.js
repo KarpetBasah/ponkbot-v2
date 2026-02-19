@@ -13,7 +13,7 @@ class PinkieAI {
         this.apiEndpoint = 'https://openrouter.ai/api/v1/chat/completions';
         
         // Using OpenRouter with Gemini 2.0 Flash Experimental (free)
-        this.modelName = 'tngtech/deepseek-r1t2-chimera:free';
+        this.modelName = 'openai/gpt-oss-120b:free';
         
         // Rate limiting protection
         this.lastRequestTime = 0;
@@ -274,7 +274,7 @@ Remember: You can be over the top when someone really needs cheering up, but mos
             } else if (lastError.message.includes('404') || lastError.message.includes('not found')) {
                 fallbackResponse = "GASP! The AI model went on vacation without telling me! *looks confused* Maybe we need to check if the model name is correct? 🎪✨";
             } else if (lastError.message.includes('Provider returned error')) {
-                fallbackResponse = "Oopsie! The AI provider (Google Gemini) is having a little trouble right now! *giggles nervously* It's not me, it's them! Try again in a bit? 🎈🔧";
+                fallbackResponse = "Oopsie! The AI provider is having a little trouble right now! *giggles nervously* It's not me, it's them! Try again in a bit? 🎈🔧";
             } else {
                 fallbackResponse = this.getFallbackResponse();
             }
