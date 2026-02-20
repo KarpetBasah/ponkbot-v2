@@ -26,7 +26,7 @@ function getWeatherEmoji(condition) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('weather')
-        .setDescription('🌦️ Check real-time weather for any city in the world!')
+        .setDescription('Check real-time weather for any city in the world!')
         .addStringOption(option =>
             option.setName('city')
                 .setDescription('Name of the city (e.g., London, Tokyo, New York)')

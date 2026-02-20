@@ -268,13 +268,13 @@ Remember: You can be over the top when someone really needs cheering up, but mos
             
             // Handle specific error types
             if (lastError.message.includes('401') || lastError.message.includes('Unauthorized')) {
-                fallbackResponse = "OOPS! My AI brain key isn't working right! *giggles nervously* Someone needs to check the OPENROUTER_API_KEY! But don't worry - I'm still here for you! 🎈🔧";
+                fallbackResponse = "Uh oh... it seems like the secret Equestrian passcode isn't working! *tugs mane nervously* The interdimensional gateway won't let me through without it. Could somepony check the access key? 🗝️";
             } else if (lastError.message.includes('429') || lastError.message.includes('rate limit')) {
-                fallbackResponse = "OH NO! I talked too much and the API is taking a cupcake break! *bounces sadly* The free tier has limits - try again in a minute or two! 🤖⚡";
+                fallbackResponse = "Oops! I've been sending so many sugar rush signals through the portal that Equestria needs a cooldown break! *taps hoof* Give it a minute and I'll be right back! 🍬";
             } else if (lastError.message.includes('404') || lastError.message.includes('not found')) {
-                fallbackResponse = "GASP! The AI model went on vacation without telling me! *looks confused* Maybe we need to check if the model name is correct? 🎪✨";
+                fallbackResponse = "Hmm, I knocked on the Equestrian portal door but nopony answered! *tilts head* Maybe they moved to a different dimension? Try again in a bit! 🚪✨";
             } else if (lastError.message.includes('Provider returned error')) {
-                fallbackResponse = "Oopsie! The AI provider is having a little trouble right now! *giggles nervously* It's not me, it's them! Try again in a bit? 🎈🔧";
+                fallbackResponse = "The Equestria Interdimensional Network is getting a little fuzzy on my end! *taps earpiece* Could be storm clouds over Canterlot. Try again shortly? 📡";
             } else {
                 fallbackResponse = this.getFallbackResponse();
             }
@@ -364,15 +364,15 @@ Keep the conversation flowing and reference previous topics when relevant!
     // Get fallback responses when AI is unavailable
     getFallbackResponse() {
         const fallbackResponses = [
-            "OHMYGOSH! My super-duper AI brain is having a little party break right now! *giggles* But I'm still here to chat with you the regular way! Maybe try asking me again in a teeny tiny bit? 🎈✨",
+            "Uh oh, I can't connect to the Equestria Interdimensional Network right now! *taps portal impatiently* Probably just weather interference over Cloudsdale. Try again in a bit? ⛅",
             
-            "OH NO OH NO! My smart-thinking magic got all mixed up like cake batter in a blender! *bounces* But hey, that just means we can have a good old-fashioned conversation instead! What's on your mind, friend? 🧁",
+            "Hmm, the signal from Equestria is super fuzzy today! *wiggles ears trying to pick up the frequency* I can almost hear something from Sugarcube Corner but it's all static-y. Try once more? 📻✨",
             
-            "*GASP!* My AI party brain decided to take a cupcake break! But don't worry - I'm still the same hyperactive, party-loving Pinkie you know and love! Just maybe not AS smart right this second! *giggles* 🎪",
+            "Oops! The magical party-line between here and Ponyville seems to be tied up right now! *bounces* Maybe somepony left a cupcake on the transceiver again. Give it a moment! 🧁",
             
-            "WHEEE! Looks like my fancy-schmancy AI thinking got tangled up in party streamers! *bounces excitedly* But that's okie dokie lokie! Sometimes the best conversations happen the old-fashioned way! What do you wanna talk about? 🎉",
+            "Oh no, the interdimensional portal blinked out on me! *presses nose against the swirly vortex* It was just here a second ago... Try poking it again and see if it wakes up? 🌀",
             
-            "OH BOY OH BOY! My super-intelligent party planning brain is having technical difficulties! *giggles* It's like when my oven timer goes off but I forgot what I was baking! Don't worry though - I'm still here for you, friend! 🍰"
+            "Eep! Looks like the Equestrian thought-transmission spell fizzled out mid-sparkle! *checks hooves for residual magic* Princess Twilight would know how to fix this. Try again in just a teensy bit! 🔮"
         ];
 
         return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];

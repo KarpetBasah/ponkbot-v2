@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('pony-trivia')
-        .setDescription('OMG! Brain-tickling pony questions! Let\'s test your friendship knowledge! 🧠🎉'),
+        .setDescription('OMG! Brain-tickling pony questions! Let\'s test your friendship knowledge!'),
     async execute(interaction) {
         const triviaQuestions = [
             {

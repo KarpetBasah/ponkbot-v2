@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('my-pony-profile')
-        .setDescription('Create your complete pony profile! 🦄')
+        .setDescription('Create your complete pony profile!')
         .addStringOption(option =>
             option.setName('name')
                 .setDescription('Your pony name (leave empty for random)')

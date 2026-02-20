@@ -37,7 +37,7 @@ function getDaysUntilBirthday(day, month) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-list')
-        .setDescription('See upcoming birthdays! Time to plan some AMAZING parties! 🎉📅')
+        .setDescription('See upcoming birthdays! Time to plan some AMAZING parties!')
         .addStringOption(option =>
             option.setName('filter')
                 .setDescription('Filter birthdays')

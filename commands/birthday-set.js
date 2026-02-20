@@ -42,7 +42,7 @@ function isValidDate(day, month) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-set')
-        .setDescription('Register your birthday so Pinkie can throw you the BEST party ever! 🎂🎉')
+        .setDescription('Register your birthday so Pinkie can throw you the BEST party ever!')
         .addIntegerOption(option =>
             option.setName('day')
                 .setDescription('Your birthday day (1-31)')

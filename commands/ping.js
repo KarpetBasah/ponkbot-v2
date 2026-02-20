@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ping')
-        .setDescription('PING PARTY TIME! Test my super-duper connection! 🎉'),
+        .setDescription('PING PARTY TIME! Test my super-duper connection!'),
     async execute(interaction) {
         const sent = await interaction.reply({ content: '� WHEEE! Testing my party connection...', fetchReply: true });
         const latency = sent.createdTimestamp - interaction.createdTimestamp;

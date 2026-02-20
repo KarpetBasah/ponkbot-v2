@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('dm-help')
-        .setDescription('Get help using the bot in Direct Messages! 💌'),
+        .setDescription('Get help using the bot in Direct Messages!'),
     async execute(interaction) {
         const isDirectMessage = interaction.guild === null;
         

@@ -5,7 +5,7 @@ const pinkieAI = require('../ai-helper');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('chat-pinkie')
-        .setDescription('Have an AI-powered conversation with Pinkie Pie! 🤖🎈')
+        .setDescription('Have an AI-powered conversation with Pinkie Pie!')
         .addStringOption(option =>
             option.setName('message')
                 .setDescription('What do you want to say to Pinkie Pie?')

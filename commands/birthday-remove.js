@@ -33,7 +33,7 @@ function saveBirthdays(birthdays) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-remove')
-        .setDescription('Remove your birthday from Pinkie\'s party calendar 😢'),
+        .setDescription('Remove your birthday from Pinkie\'s party calendar'),
     async execute(interaction) {
         const targetUser = interaction.user;
         

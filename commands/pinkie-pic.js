@@ -5,7 +5,7 @@ const rateLimiter = require('../rate-limiter');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('pinkie-pic')
-        .setDescription('Get a random cute and safe Pinkie Pie picture from Derpibooru! 🎉🧁')
+        .setDescription('Get a random cute and safe Pinkie Pie picture from Derpibooru!')
         .addStringOption(option =>
             option.setName('mood')
                 .setDescription('What kind of Pinkie Pie picture do you want?')

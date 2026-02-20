@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('friendship-chat')
-        .setDescription('Have a friendly conversation about anything! 💬')
+        .setDescription('Have a friendly conversation about anything!')
         .addStringOption(option =>
             option.setName('topic')
                 .setDescription('What would you like to talk about?')
