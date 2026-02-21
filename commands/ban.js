@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ban')
-        .setDescription('Ban a member from the server permanently! 🔨')
+        .setDescription('Ban a member from the server permanently!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to ban from the server')

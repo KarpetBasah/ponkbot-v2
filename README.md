@@ -235,7 +235,6 @@ Pinkie Pie represents:
 
 - **Discord.js v14** - Modern Discord bot framework
 - **OpenRouter API** - AI conversation engine
-- **Gemini 2.0 Flash Exp** - Free, powerful language model
 - **OpenWeatherMap API** - Real-time weather data
 - **Derpibooru API** - MLP artwork integration
 - **JSON Storage** - Simple, reliable data persistence
@@ -249,15 +248,15 @@ ponkbot-v2/
 │   ├── chat-pinkie.js # AI conversation command
 │   ├── birthday.js    # Birthday system
 │   ├── memory.js      # Memory management
-│   ├── mlp-image.js   # Derpibooru integration
+│   ├── pinkie-pic.js   # Derpibooru integration
 │   └── ...           # Other commands
 ├── events/           # Discord event handlers
 │   ├── ready.js      # Bot startup
 │   ├── messageCreate.js # Message handling
 │   └── ...
-├── gemini-helper.js  # AI conversation engine
+├── ai-helper.js  # AI conversation engine
 ├── memory-system.js  # Conversation memory
-├── birthday-manager.js # Birthday automation
+├── birthday-checker.js # Birthday automation
 ├── data/            # JSON data storage
 │   ├── birthdays/   # Birthday data
 │   └── memory/      # Conversation history
@@ -283,4 +282,4 @@ This project is open source and available for anypony to use! Just remember to t
 
 **Built with love, cupcakes, and lots of party cannons!** 💖
 
-Made with Discord.js v14 | Powered by OpenRouter & Gemini 2.0 | Inspired by Friendship is Magic ✨
+Made with Discord.js v14 | Powered by OpenRouter | Inspired by Friendship is Magic ✨

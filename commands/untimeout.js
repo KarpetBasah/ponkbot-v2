@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('untimeout')
-        .setDescription('Remove timeout from a member! 🕐')
+        .setDescription('Remove timeout from a member!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to remove timeout from')

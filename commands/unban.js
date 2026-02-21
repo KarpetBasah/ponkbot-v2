@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('unban')
-        .setDescription('Unban a user from the server - second chances! 🌈')
+        .setDescription('Unban a user from the server - second chances!')
         .addStringOption(option =>
             option.setName('user-id')
                 .setDescription('The User ID of the person to unban')

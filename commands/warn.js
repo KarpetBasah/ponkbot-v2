@@ -37,7 +37,7 @@ function saveWarnings(warnings) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warn')
-        .setDescription('Give a member a friendly warning! ⚠️')
+        .setDescription('Give a member a friendly warning!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to warn')

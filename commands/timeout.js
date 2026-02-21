@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('timeout')
-        .setDescription('Put a member in timeout (temporary mute)! ⏰')
+        .setDescription('Put a member in timeout (temporary mute)!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to timeout')

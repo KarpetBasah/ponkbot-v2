@@ -4,7 +4,7 @@ const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('kick')
-        .setDescription('Kick a member from the server with friendship guidance! 🥾')
+        .setDescription('Kick a member from the server with friendship guidance!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to kick from the server')
