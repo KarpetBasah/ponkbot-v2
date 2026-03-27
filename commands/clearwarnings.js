@@ -28,7 +28,7 @@ function saveWarnings(warnings) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clearwarnings')
-        .setDescription('Clear all warnings for a user! 🧹')
+        .setDescription('Clear all warnings for a user!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to clear warnings for')

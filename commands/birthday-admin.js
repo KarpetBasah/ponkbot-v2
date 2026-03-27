@@ -41,7 +41,7 @@ const MONTH_NAMES = [
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-admin')
-        .setDescription('🛠️ Admin tools to manage birthday data for any server member')
+        .setDescription('Admin tools to manage birthday data for any server member')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .setDMPermission(false)
 

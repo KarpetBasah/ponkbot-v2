@@ -27,7 +27,7 @@ function saveConfig(config) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-channel')
-        .setDescription('🎂 Configure the channel for birthday announcements!')
+        .setDescription('Configure the channel for birthday announcements!')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .setDMPermission(false)
         .addSubcommand(sub =>

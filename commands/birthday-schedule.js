@@ -28,7 +28,7 @@ function calculateTimeUntilMidnightUTC() {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-schedule')
-        .setDescription('Check Pinkie\'s birthday checker schedule and next run time! ⏰🎂')
+        .setDescription('Check Pinkie\'s birthday checker schedule and next run time!')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
     async execute(interaction) {
         try {

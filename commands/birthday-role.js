@@ -27,7 +27,7 @@ function saveConfig(config) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('birthday-role')
-        .setDescription('🎭 Configure the role automatically given to members on their birthday!')
+        .setDescription('Configure the role automatically given to members on their birthday!')
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
         .setDMPermission(false)
         .addSubcommand(sub =>

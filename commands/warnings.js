@@ -20,7 +20,7 @@ function loadWarnings() {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warnings')
-        .setDescription('View warnings for a user! 📋')
+        .setDescription('View warnings for a user!')
         .addUserOption(option =>
             option.setName('user')
                 .setDescription('The user to check warnings for')
