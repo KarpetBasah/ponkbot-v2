@@ -44,17 +44,55 @@ module.exports = {
             "🎊 Ready for a surprise party!"
         ];
         
-        const randomStatus = pinkieStatuses[Math.floor(Math.random() * pinkieStatuses.length)];
-        
-        client.user.setPresence({
-            activities: [{
-                name: 'Custom Status', 
-                state: randomStatus,
-                type: ActivityType.Custom,
-            }],
-            status: 'online',
-        });
-        console.log(`🎈 Pinkie's status set to: ${randomStatus}`);
+        const setRandomStatus = () => {
+            const randomStatus = pinkieStatuses[Math.floor(Math.random() * pinkieStatuses.length)];
+            client.user.setPresence({
+                activities: [{
+                    name: 'Custom Status',
+                    state: randomStatus,
+                    type: ActivityType.Custom,
+                }],
+                status: 'online',
+            });
+            console.log(`🎈 Pinkie's status set to: ${randomStatus}`);
+        };
+
+        const getCurrentUTCTime = () => {
+            const now = new Date();
+            return {
+                hours: now.getUTCHours(),
+                minutes: now.getUTCMinutes(),
+                seconds: now.getUTCSeconds()
+            };
+        };
+
+        const calculateTimeUntilMidnightUTC = () => {
+            const now = new Date();
+            const nextMidnight = new Date(now);
+            nextMidnight.setUTCHours(24, 0, 0, 0);
+            return nextMidnight.getTime() - now.getTime();
+        };
+
+        // Set status immediately on startup
+        setRandomStatus();
+
+        // Schedule status update at 00:00 UTC daily
+        const utcTime = getCurrentUTCTime();
+        console.log(`⏰ Status scheduler UTC time: ${utcTime.hours.toString().padStart(2, '0')}:${utcTime.minutes.toString().padStart(2, '0')}:${utcTime.seconds.toString().padStart(2, '0')}`);
+        const timeUntilMidnight = calculateTimeUntilMidnightUTC();
+        const hoursUntilMidnight = Math.floor(timeUntilMidnight / (1000 * 60 * 60));
+        const minutesUntilMidnight = Math.floor((timeUntilMidnight % (1000 * 60 * 60)) / (1000 * 60));
+        console.log(`⏰ Next status update scheduled for 00:00 UTC (in ${hoursUntilMidnight}h ${minutesUntilMidnight}m)`);
+
+        setTimeout(() => {
+            console.log('🌙 It\'s midnight UTC! Updating Pinkie\'s status...');
+            setRandomStatus();
+            setInterval(() => {
+                const currentUTC = getCurrentUTCTime();
+                console.log(`🌙 Daily status update at ${currentUTC.hours.toString().padStart(2, '0')}:${currentUTC.minutes.toString().padStart(2, '0')} UTC`);
+                setRandomStatus();
+            }, 24 * 60 * 60 * 1000);
+        }, timeUntilMidnight);
 
         // --- AUTOMATIC SLASH COMMAND REGISTRATION ---
         // Menggunakan sistem otomatis berdasarkan file di folder /commands/

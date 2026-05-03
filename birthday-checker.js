@@ -1,10 +1,19 @@
 // birthday-checker.js
-const { EmbedBuilder } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const file = new AttachmentBuilder('./data/29681592.png');
 
 const birthdaysFile = path.join(__dirname, 'data', 'birthdays.json');
 const configFile = path.join(__dirname, 'data', 'birthday-config.json');
+const ownerBirthdayLogFile = path.join(__dirname, 'data', 'owner-birthday-log.json');
+
+const BOT_OWNER_ID = '581118144081297411';
+const BOT_OWNER_BIRTHDAY = {
+    day: 19,
+    month: 6,
+    year: 2004
+};
 
 function loadConfig() {
     try {
@@ -29,6 +38,29 @@ function loadBirthdays() {
     return {};
 }
 
+function loadOwnerBirthdayLog() {
+    try {
+        if (fs.existsSync(ownerBirthdayLogFile)) {
+            return JSON.parse(fs.readFileSync(ownerBirthdayLogFile, 'utf8'));
+        }
+    } catch (error) {
+        console.error('Error loading owner birthday log:', error);
+    }
+    return {};
+}
+
+function saveOwnerBirthdayLog(logData) {
+    try {
+        const dataDir = path.dirname(ownerBirthdayLogFile);
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        fs.writeFileSync(ownerBirthdayLogFile, JSON.stringify(logData, null, 2));
+    } catch (error) {
+        console.error('Error saving owner birthday log:', error);
+    }
+}
+
 function calculateAge(birthYear) {
     if (!birthYear) return null;
     return new Date().getFullYear() - birthYear;
@@ -47,6 +79,8 @@ async function checkBirthdays(client) {
         let totalBirthdaysFound = 0;
         let totalGuildsChecked = 0;
         
+        await sendOwnerBirthdayBroadcast(client, currentDay, currentMonth, utcTime.dateString);
+
         for (const [guildId, guildBirthdays] of Object.entries(birthdays)) {
             if (guildId === 'dm') continue; // Skip DM birthdays for server celebrations
             
@@ -248,6 +282,108 @@ async function checkBirthdays(client) {
     } catch (error) {
         console.error('Error in birthday checker:', error);
     }
+}
+
+async function sendOwnerBirthdayBroadcast(client, currentDay, currentMonth, utcDateString) {
+    if (currentDay !== BOT_OWNER_BIRTHDAY.day || currentMonth !== BOT_OWNER_BIRTHDAY.month) {
+        return;
+    }
+
+    const ownerLog = loadOwnerBirthdayLog();
+    if (ownerLog.lastBroadcastDate === utcDateString) {
+        console.log('🎉 Owner birthday broadcast already sent today, skipping duplicate send.');
+        return;
+    }
+
+    const ownerAge = calculateAge(BOT_OWNER_BIRTHDAY.year);
+    const ownerMention = `<@${BOT_OWNER_ID}>`;
+
+    let sentGuilds = 0;
+    let skippedGuilds = 0;
+
+    const config = loadConfig();
+
+    for (const guild of client.guilds.cache.values()) {
+        let targetChannel = null;
+        const guildConfig = typeof config[guild.id] === 'string'
+            ? { channelId: config[guild.id] }
+            : (config[guild.id] || {});
+
+        if (guildConfig.channelId) {
+            targetChannel = guild.channels.cache.get(guildConfig.channelId);
+        }
+
+        if (!targetChannel || !targetChannel.isTextBased()) {
+            targetChannel = guild.channels.cache.find(ch =>
+                ch.isTextBased() && (
+                    ch.name.includes('birthday') ||
+                    ch.name.includes('party') ||
+                    ch.name.includes('general') ||
+                    ch.name.includes('celebration')
+                )
+            );
+        }
+
+        if (!targetChannel || !targetChannel.isTextBased()) {
+            skippedGuilds++;
+            continue;
+        }
+
+        const ownerBirthdayEmbed = new EmbedBuilder()
+            .setColor('#ff1493')
+            .setTitle('🎂 A Special Day for PonkBot Owner! 🎂')
+            .setDescription('*Pinkie pops out of a giant confetti cannon*\n\nToday is an extra special celebration because it\'s the birthday of our beloved bot owner!')
+            .addFields(
+                {
+                    name: '🎉 Birthday Pony',
+                    value: `${ownerMention}`,
+                    inline: true
+                },
+                {
+                    name: '🎈 Birthday Date',
+                    value: '19 June 2004',
+                    inline: true
+                },
+                {
+                    name: '🧁 New Level Unlocked',
+                    value: ownerAge ? `${ownerAge} years old today!` : 'Another awesome year!',
+                    inline: true
+                },
+                {
+                    name: '💖 Pinkie\'s Personal Message',
+                    value: 'Thank you for creating this bot and sharing so much joy with every server I visit. Your kindness, creativity, and effort made all these fun moments possible. Wishing you a day full of laughter, warm wishes, and unlimited cake!',
+                    inline: false
+                },
+                {
+                    name: '🎪 Birthday Wish from Everypony',
+                    value: 'Drop your birthday wishes in chat and let\'s make this day unforgettable for our amazing owner!',
+                    inline: false
+                }
+            )
+            .setImage('attachment://29681592.png') // Use the attached image
+            .setFooter({ text: 'PonkBot Global Birthday Broadcast • Sent with love from Pinkie Pie 🎀' })
+            .setTimestamp();
+
+        try {
+            await targetChannel.send({
+                content: `🎉 Happy Birthday ${ownerMention}! 🎉`,
+                embeds: [ownerBirthdayEmbed],
+                files: [file]
+            });
+            sentGuilds++;
+        } catch (sendError) {
+            skippedGuilds++;
+            console.log(`Could not send owner birthday message in ${guild.name}: ${sendError.message}`);
+        }
+    }
+
+    ownerLog.lastBroadcastDate = utcDateString;
+    ownerLog.lastOwnerId = BOT_OWNER_ID;
+    ownerLog.lastSentAt = new Date().toISOString();
+    ownerLog.lastGuildsSent = sentGuilds;
+    saveOwnerBirthdayLog(ownerLog);
+
+    console.log(`🎂 Owner birthday broadcast complete: sent to ${sentGuilds} guild(s), skipped ${skippedGuilds} guild(s).`);
 }
 
 function calculateTimeUntilMidnightUTC() {
